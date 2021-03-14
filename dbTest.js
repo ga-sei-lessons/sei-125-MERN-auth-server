@@ -17,11 +17,11 @@ const mongoConnect = (async () => {
     // Connection methods
     db.once('open', () => {
       console.log(`🔗 Connected to MongoDB at ${db.host}:${db.port}`);
-    });
+    })
 
     db.on('error',  err => {
       console.error(`🔥 Database Error:\n${err}`);
-    });
+    })
 
   } catch (error) {
     console.log(error)
@@ -43,7 +43,7 @@ const userTest = (async () => {
     // READ
     const foundUser =  await db.User.findOne({
       name: newUser.name
-    })
+    }).exec()
 
     console.log('foundUser', foundUser)
 
@@ -54,14 +54,14 @@ const userTest = (async () => {
 
     const findUserAgain = await db.User.findOne({
       name: 'bangBang'
-    })
+    }).exec()
 
     console.log('findUserAgain', findUserAgain)
 
     // DESTROY
     const deleteUser = await db.User.deleteOne({
       name: 'bangBang'
-    })
+    }).exec()
 
     console.log('deleteUser', deleteUser)
 

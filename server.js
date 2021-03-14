@@ -5,6 +5,8 @@ const cors = require('cors')
 const rowdy = require('rowdy-logger')
 const morgan = require('morgan')
 const mongoose = require("mongoose")
+const jwt = require('jsonwebtoken')
+const db = require('./models')
 
 // config express app
 const app = express()
@@ -45,11 +47,28 @@ const mongoConnect = (async () => {
   }
 })()
 
-
+// auth middleware
+app.use(async (req, res, next) => {
+  try {
+    const authHeader = req.headers.authorization
+    const decode = await jwt.verify(authHeader, process.env.JWT_SECRET)
+    console.log(decode)
+    const foundUser = await db.User.findById(decode.id)
+    console.log(foundUser)
+    res.locals.user = foundUser
+    next()
+  
+  } catch(error) {
+    res.locals.user = null
+    console.log(error)
+    next({type: 'auth', error: error})
+  }
+})
 
 // GET / - for testing 
 app.get('/', (req, res) => {
-  res.json({ msg: 'Hello Planet Earth 🌏'})
+  console.log(res.locals)
+  res.json({ msg: 'Hello Planet Earth 🌏', user: res.locals.user})
 })
 
 // controllers
@@ -61,8 +80,8 @@ app.use((req, res, next) => {
 })
 
 // error handling middleware
-app.use((req, res, next, err) => {
-  res.status(500).json({ msg: 'something has gone terribly wrong 🚨', err })
+app.use((err, req, res, next) => {
+  res.status(500).json({ msg: 'something has gone terribly wrong 🚨' })
   console.log(err)
 })
 
