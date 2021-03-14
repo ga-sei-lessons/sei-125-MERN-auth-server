@@ -20,21 +20,32 @@ app.use(express.urlencoded({ extended: false }))
 app.use(express.json())
 
 // mongoose config
-const db = process.env.MONGODB_URI
+const MONGODB_URI = process.env.MONGODB_URI
 
 const mongoConnect = (async () => {
   try {
-    await mongoose.connect(db, {
+    await mongoose.connect(MONGODB_URI, {
       useNewUrlParser: true,
       useUnifiedTopology: true,
-      useFindAndModify: false,
-      useCreateIndex: true
     })
-    console.log('db connected 🤖')
+
+    const db = mongoose.connection;
+
+    // Connection methods
+    db.once('open', () => {
+      console.log(`🔗 Connected to MongoDB at ${db.host}:${db.port}`);
+    });
+
+    db.on('error',  err => {
+      console.error(`🔥 Database Error:\n${err}`);
+    });
+
   } catch (error) {
     console.log(error)
   }
 })()
+
+
 
 // GET / - for testing 
 app.get('/', (req, res) => {
