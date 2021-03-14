@@ -30,7 +30,7 @@ const mongoConnect = (async () => {
       useFindAndModify: false,
       useCreateIndex: true
     })
-    console.log('db connected')
+    console.log('db connected 🤖')
   } catch (error) {
     console.log(error)
   }
@@ -42,6 +42,7 @@ app.get('/', (req, res) => {
 })
 
 // controllers
+app.use('/api-v1/users', require('./controllers/api-v1/users.js'))
 
 // 404 middleware
 app.use((req, res, next) => {
@@ -50,7 +51,7 @@ app.use((req, res, next) => {
 
 // error handling middleware
 app.use((req, res, next, err) => {
-  res.status(500).json({ msg:  'something has gone terribly wrong 🚨', err })
+  res.status(500).json({ msg: 'something has gone terribly wrong 🚨', err })
   console.log(err)
 })
 
