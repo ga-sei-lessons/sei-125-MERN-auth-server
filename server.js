@@ -39,7 +39,7 @@ const mongoConnect = (async () => {
     });
 
     db.on('error',  err => {
-      console.error(`🔥 Database Error:\n${err}`);
+      console.error(`🔥 Datacenter burned down:\n${err}`);
     });
 
   } catch (error) {
