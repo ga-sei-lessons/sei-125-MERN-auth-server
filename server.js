@@ -48,22 +48,53 @@ const mongoConnect = (async () => {
 })()
 
 // auth middleware
-app.use(async (req, res, next) => {
-  try {
+// jwt middleware on every route makes reqs with bad auth tokens
+// default to 500 res's or get stuck in redirect loops
+// app.use(async (req, res, next) => {
+//   try {
+//     const authHeader = req.headers.authorization
+//     const decode = await jwt.verify(authHeader, process.env.JWT_SECRET)
+//     console.log(decode)
+//     const foundUser = await db.User.findById(decode.id)
+//     console.log(foundUser)
+//     res.locals.user = foundUser
+//     next()
+  
+//   } catch(error) {
+//     res.locals.user = null
+//     // console.log(error)
+//     // next({type: 'auth', error: error})
+//     res.redirect('/')
+//   }
+// })
+
+// maybe this isn't needed
+app.use((req, res, next) => {
+  res.locals.user = null
+  next()
+})
+
+// route specific middleware for jwt authorization
+const authRoute = async (req, res, next) => {
+    try {
+    // jwt from client
     const authHeader = req.headers.authorization
-    const decode = await jwt.verify(authHeader, process.env.JWT_SECRET)
-    console.log(decode)
-    const foundUser = await db.User.findById(decode.id)
-    console.log(foundUser)
-    res.locals.user = foundUser
-    next()
+    if(authHeader) {
+      // will throw to catch if jwt can't be verified
+      const decode = await jwt.verify(authHeader, process.env.JWT_SECRET)
+      // find user from db
+      const foundUser = await db.User.findById(decode.id)
+      // mount user on locals
+      res.locals.user = foundUser
+      next()
+    }
   
   } catch(error) {
-    res.locals.user = null
     console.log(error)
-    next({type: 'auth', error: error})
+    // next({type: 'auth', error: error})
+    res.redirect('/')
   }
-})
+} 
 
 // GET / - for testing 
 app.get('/', (req, res) => {
@@ -73,6 +104,11 @@ app.get('/', (req, res) => {
 
 // controllers
 app.use('/api-v1/users', require('./controllers/api-v1/users.js'))
+
+// GET /auth-locked - will redirect if bad jst token is found
+app.get('/auth-locked', authRoute, (req, res) => {
+  res.json({ msg: 'welcome to the auth route' })
+})
 
 // 404 middleware
 app.use((req, res, next) => {
