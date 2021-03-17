@@ -1,5 +1,5 @@
 const router = require('express').Router()
-const db = require('../../models')
+const User = require('../../models/User')
 const bcrypt = require('bcryptjs')
 const jwt = require('jsonwebtoken')
 
@@ -8,10 +8,11 @@ router.get('/', (req, res) => {
   res.json({ msg: 'welcome to the users endpoint' })
 })
 
+// POST /users/register - CREATE new user
 router.post('/register', async (req, res) => {
   try {
     // check if user exists already
-    const findUser = await db.User.findOne({
+    const findUser = await User.findOne({
       email: req.body.email
     })
 
@@ -24,7 +25,7 @@ router.post('/register', async (req, res) => {
     const hashedPassword = await bcrypt.hash(password, saltRounds)
   
     // create new user
-    const newUser = new db.User({
+    const newUser = new User({
       name: req.body.name,
       email: req.body.email,
       password: hashedPassword
@@ -32,7 +33,7 @@ router.post('/register', async (req, res) => {
   
     await newUser.save()
 
-    // console.log(newUser.id)
+    // create jwt payload
     const payload = {
       name: newUser.name,
       id: newUser.id
@@ -47,10 +48,11 @@ router.post('/register', async (req, res) => {
   }
 })
 
+// POST /users/login -- validate login credentials
 router.post('/login', async (req, res) => {
   try {
     // try to find user in the db
-    const foundUser = await db.User.findOne({
+    const foundUser = await User.findOne({
       email: req.body.email
     })
 
@@ -68,6 +70,7 @@ router.post('/login', async (req, res) => {
     // create jwt payload
     const payload = {
       name: foundUser.name,
+      email: foundUser.email, 
       id: foundUser.id
     }
 
@@ -77,6 +80,22 @@ router.post('/login', async (req, res) => {
     res.json({ token })
   } catch(error) {
     next(error)
+  }
+})
+
+// GET /users/auth - validate a jwt token (but thats it)
+router.get('/auth', async (req, res) => {
+  try {
+    // jwt from client
+    const authHeader = req.headers.authorization
+    // will throw to catch if jwt can't be verified
+    const decode = await jwt.verify(authHeader, process.env.JWT_SECRET)
+    // res with status of okay if jwt was verified
+    res.status(200).json({ msg: 'auth succeeded' })
+  } catch (error) {
+    console.log(error)
+    // respond with status 400 if auth fails
+    res.status(400).json({ msg: 'auth failed' })
   }
 })
 

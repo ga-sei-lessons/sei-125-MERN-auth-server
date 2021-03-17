@@ -4,9 +4,8 @@ const express = require('express')
 const cors = require('cors')
 const rowdy = require('rowdy-logger')
 const morgan = require('morgan')
-const mongoose = require("mongoose")
 const jwt = require('jsonwebtoken')
-const db = require('./models')
+require('./models')
 
 // config express app
 const app = express()
@@ -20,32 +19,6 @@ app.use(morgan('tiny'))
 // request body parser middleware for POST reqs
 app.use(express.urlencoded({ extended: false }))
 app.use(express.json())
-
-// mongoose config
-const MONGODB_URI = process.env.MONGODB_URI
-
-const mongoConnect = (async () => {
-  try {
-    await mongoose.connect(MONGODB_URI, {
-      useNewUrlParser: true,
-      useUnifiedTopology: true,
-    })
-
-    const db = mongoose.connection;
-
-    // Connection methods
-    db.once('open', () => {
-      console.log(`🔗 Connected to MongoDB at ${db.host}:${db.port}`);
-    });
-
-    db.on('error',  err => {
-      console.error(`🔥 Datacenter burned down:\n${err}`);
-    });
-
-  } catch (error) {
-    console.log(error)
-  }
-})()
 
 // auth middleware
 // jwt middleware on every route makes reqs with bad auth tokens
@@ -79,20 +52,18 @@ const authRoute = async (req, res, next) => {
     try {
     // jwt from client
     const authHeader = req.headers.authorization
-    if(authHeader) {
-      // will throw to catch if jwt can't be verified
-      const decode = await jwt.verify(authHeader, process.env.JWT_SECRET)
-      // find user from db
-      const foundUser = await db.User.findById(decode.id)
-      // mount user on locals
-      res.locals.user = foundUser
-      next()
-    }
+    // will throw to catch if jwt can't be verified
+    const decode = await jwt.verify(authHeader, process.env.JWT_SECRET)
+    // find user from db
+    const foundUser = await db.User.findById(decode.id)
+    // mount user on locals
+    res.locals.user = foundUser
+    next()
   
   } catch(error) {
     console.log(error)
-    // next({type: 'auth', error: error})
-    res.redirect('/')
+    // respond with status 400 if auth fails
+    res.status(400).json({ msg: 'auth failed' })
   }
 } 
 
@@ -105,7 +76,7 @@ app.get('/', (req, res) => {
 // controllers
 app.use('/api-v1/users', require('./controllers/api-v1/users.js'))
 
-// GET /auth-locked - will redirect if bad jst token is found
+// GET /auth-locked - will redirect if bad jwt token is found
 app.get('/auth-locked', authRoute, (req, res) => {
   res.json({ msg: 'welcome to the auth route' })
 })

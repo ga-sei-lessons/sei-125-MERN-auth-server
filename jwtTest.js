@@ -1,6 +1,6 @@
 const jwt = require('jsonwebtoken')
 
-const jwtTest = (async () => {
+const jwtTest = async () => {
   try {
     // create jwt payload
     const payload = {
@@ -12,11 +12,13 @@ const jwtTest = (async () => {
     const token = await jwt.sign(payload, 'My super big secret', { expiresIn: 3600 })
     console.log(token)
     
-    // decode jst token
+    // decode jwt token
     const decode = await jwt.verify(token, 'My super big secret')
     console.log(decode)
     
   } catch(error) {
     console.log(error)
   } 
-})()
+}
+
+jwtTest()

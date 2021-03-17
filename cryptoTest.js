@@ -1,6 +1,6 @@
 const bcrypt = require('bcryptjs')
 
-const testCrypto = (async () => {
+const testCrypto = async () => {
   // test hashing
   const password = 'hello'
   const saltRounds = 12;
@@ -10,4 +10,6 @@ const testCrypto = (async () => {
   // match the hashed password to a string
   const matchPasswords = await bcrypt.compare('hello', hashedPassword)
   console.log('matchedPasswords', matchPasswords)
-})()
+}
+
+testCrypto()
