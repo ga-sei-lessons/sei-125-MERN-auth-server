@@ -36,8 +36,9 @@ router.post('/register', async (req, res) => {
 
     // create jwt payload
     const payload = {
-      name: newUser.name,
-      id: newUser.id
+      name: foundUser.name,
+      email: foundUser.email, 
+      id: foundUser.id
     }
 
     // sign jwt and send back
