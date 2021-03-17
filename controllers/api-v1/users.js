@@ -2,6 +2,7 @@ const router = require('express').Router()
 const User = require('../../models/User')
 const bcrypt = require('bcryptjs')
 const jwt = require('jsonwebtoken')
+const authLockedRoute = require('./authLockedRoute')
 
 // GET /users - test endpoint
 router.get('/', (req, res) => {
@@ -83,20 +84,27 @@ router.post('/login', async (req, res) => {
   }
 })
 
-// GET /users/auth - validate a jwt token (but thats it)
-router.get('/auth', async (req, res) => {
-  try {
-    // jwt from client
-    const authHeader = req.headers.authorization
-    // will throw to catch if jwt can't be verified
-    const decode = await jwt.verify(authHeader, process.env.JWT_SECRET)
-    // res with status of okay if jwt was verified
-    res.status(200).json({ msg: 'auth succeeded' })
-  } catch (error) {
-    console.log(error)
-    // respond with status 400 if auth fails
-    res.status(400).json({ msg: 'auth failed' })
-  }
+
+// GET /auth-locked - will redirect if bad jwt token is found
+router.get('/auth-locked', authLockedRoute, (req, res) => {
+  console.log(res.locals.user)
+  res.json({ msg: 'welcome to the auth route' })
 })
+
+// GET /users/auth - validate a jwt token (but thats it)
+// router.get('/auth', async (req, res) => {
+//   try {
+//     // jwt from client
+//     const authHeader = req.headers.authorization
+//     // will throw to catch if jwt can't be verified
+//     const decode = await jwt.verify(authHeader, process.env.JWT_SECRET)
+//     // res with status of okay if jwt was verified
+//     res.status(200).json({ msg: 'auth succeeded' })
+//   } catch (error) {
+//     console.log(error)
+//     // respond with status 400 if auth fails
+//     res.status(400).json({ msg: 'auth failed' })
+//   }
+// })
 
 module.exports = router
